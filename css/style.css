@@ -4,18 +4,17 @@
 	border:0;
 	box-sizing: border-box;
 	font-family: 'Montserrat', sans-serif;
+	outline: none;
 }
 
 textarea {
     border: none;
     overflow: auto;
     outline: none;
-
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
-
-    resize: none; /*remove the resize handle on the bottom right*/
+    resize: none;
 }
 
 html, body{
@@ -26,15 +25,17 @@ html, body{
 #add__btn {
 	font-size: 50px;
 	color: black;
+	transition: all 0.3s ease 0s;
 }
 
 #add__btn:hover{
-	color: grey;
+	color: white;
 	cursor: pointer;
+	text-shadow: 0px 1px 2px black;
+	transition: all 0.3s ease 0s;
 }
 .header {
 	height: 50px;
-	
 }
 .container__header {
 	max-width: 1030px;
@@ -91,12 +92,6 @@ html, body{
 	z-index: 0;
 }
 
-.container__note{
-	/* text-align: justify;
-	display: flex;
-	flex-direction: column; */
-}
-
 .note__title{
 	font-size: 25px;
 	font-weight: 600;
@@ -110,9 +105,6 @@ html, body{
 	word-wrap: break-word;
 	z-index: 2;
 	position: relative;
-}
-
-.note__text p {
 }
 
 .note__date{
@@ -155,17 +147,53 @@ html, body{
 	height: auto;
 }
 
+.note__btns{
+	display: flex;
+	justify-content: space-between;
+	width: 30%;
+}
+
+.btn__change{
+	position: relative;
+	left: 20px;
+	top: 2px;
+	width: 20px;
+	transition: all 0.3s ease 0s;
+}
+
+.btn__change img{
+	width: 100%;
+	transition: all 0.1s linear 0s;
+}
+
+.btn__change:hover img{
+	filter: invert(1);
+	transition: all 0.1s linear 0s;
+}
+
 .btn__del{
 	max-width: 20px;
 	height: 20px;
-	/* position: absolute;
-	right: 10px;
-	bottom: 10px; */
 }
 
 .btn__del img{
 	width: 100%;
 	transition: all 0.3s ease 0s;
+}
+
+.color__list{
+	display: flex;
+}
+
+.color__item{
+	width: 20px;
+	height: 20px;
+	list-style: none;
+	border: 1px solid black;
+}
+
+.color__item:hover{
+	border: 1px solid white;
 }
 
 .btn__del:hover img{
@@ -181,7 +209,6 @@ html, body{
 
 .note__tag{
 	background-color: rgba(255, 255, 255, 1);
-	/* display: flex; */
 	min-width: 15px;
 	padding: 4px;
 	border-radius: 8px;

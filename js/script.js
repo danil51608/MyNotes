@@ -1,68 +1,53 @@
-const addBtn = document.getElementById('add__btn');
+﻿const addBtn = document.getElementById('add__btn');
 const content = document.querySelector('.container');
 const col1 = document.querySelector('.col-1');
 const col2 = document.querySelector('.col-2');
 const col3 = document.querySelector('.col-3');
 const addTag = document.querySelectorAll('.add__tag');
-let date = new Date();
-let Notes = JSON.parse(localStorage.getItem('notes'));
-let id = Notes.length > 0 ? Notes[Notes.length-1].id+1 : 0;
-let newdate = formatDate(date, 'DD.MM.YY  hh:mm')//форматирование даты
+let Notes = JSON.parse(localStorage.getItem('notes')) == null ? [] : JSON.parse(localStorage.getItem('notes')); //checks if localStorage exists
+
+let id = Notes.length > 0 ? Notes[Notes.length-1].id+1 : 0; //sets actual id
+
 let colors = [
     [250, 128, 114],
     [152, 251, 152],
     [255, 192, 203],
     [176, 196, 222],
     [240, 230, 140],
-    [220, 220, 220],
-    [240, 230, 140]
+    [220, 220, 220] 
 ]
-let color;
-drawNotes()
+let color; //sets global color variable
+drawNotes() // draws existing notes on the first loading
 
-//нажатие на кнопку добавить
 addBtn.addEventListener('click', () => {
     noteMaker();
 });
 
-//создание макета заметки
+//creates a note's layout
 function noteMaker() {
-    color = colors[Math.floor(Math.random()*colors.length)];
-    //html код макета
-    let noteObj = `<div id='note${id}' class='note__box' style='background: rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)'>
-                    <div class="container__note">
-                        <input id='title${id}' type='text' class="note__title title__input" placeholder='Title'/>
-                        <textarea id='text${id}' class="note__text text__input" placeholder='Type your note...'></textarea>
-                          
-                        </div>
-                        <div id='date${id}' class="note__date">${newdate}</div>
-                        <input type='submit' class="btn_note_add" onclick='addNoteToList(${id})' value='+'>
-                    </div>
-                </div>`
+    let date = new Date();
+    let newdate = formatDate(date, 'DD.MM.YY  hh:mm')//formats date
+    color = colors[Math.floor(Math.random()*colors.length)]; //gets random color
+    let noteObj = createMaketDiv(newdate) //creates html object of a note's layout
 
-    //сдвиг предыдущих заметок вправо для освобождения места для новой заметки
     Notes.forEach(note => {
-        moveCol(note, 'r');
+        moveCol(note, 'r'); //moves each note into the next column to make space for a new one
     })
-    id++
-    console.log(id)
-    //удаление старого отображения
-    clearHTML();
-    //отрисовка нового
-    drawNotes();
 
-    //вставка макета в первую колонку
-    col1.insertAdjacentHTML('afterbegin', noteObj);
+    id++ //increases id
+    clearHTML(); //removes an old display
+    drawNotes(); //draws a new one
+    col1.insertAdjacentHTML('afterbegin', noteObj); //inserts the layout into the first column
 }
 
-//создание заметки и добавление ее в список
+//creates a note, pushes the note to the Notes
 function addNoteToList(id) {
-    const note = document.getElementById('note' + id);
-    const title = document.getElementById('title' + id);
+    const note = document.getElementById('note' + id); //gets the current value of the note's layout
+    const title = document.getElementById('title' + id); 
     const text = document.getElementById('text' + id);
     const date = document.getElementById('date' + id);
 
-    //создание объекта заметки
+    //creates a note object
     let noteObj = {
         id: id,
         title: title.value,
@@ -73,51 +58,34 @@ function addNoteToList(id) {
         tags: []
     }
 
-    //не вставляет пустую заметку
+    //checks if the note's inputs are filled
     if (noteObj.title != '' && noteObj.text != '') {
         Notes.push(noteObj);
-        localStorage.setItem('notes', JSON.stringify(Notes))
-        note.remove(); //удаляет создающий макет заметки
-        drawNotes();
+        note.remove(); //delets the creating layout
+        drawNotes(); //draws the new display
     }
 }
 
-//отрисовка заметок. Вставка заметок в колонки
+//draws display, inserts notes to columns
 function drawNotes() {
     clearHTML();
+    localStorage.setItem('notes', JSON.stringify(Notes)) //saves Notes to the localStorage
     Notes.forEach(note => {
-        let noteObj = ` <div id='note${note.id}' class="note__box" style='background:linear-gradient(225deg, transparent 40px, rgba(${note.color[0]}, ${note.color[1]}, ${note.color[2]}, 1) 0);'>
-                            <div class='corner' style='background:linear-gradient(225deg, transparent 40px, rgba(${note.color[0]-30}, ${note.color[1]-40}, ${note.color[2]-40}, 1) 0);'></div>
-                            <div class="container__note">
-                                <div id='title${note.id}' class="note__title">${note.title}</div>
-                                <div id='text${note.id}' class="note__text">
-                                    <p>${note.text}</p>
-                                </div>
-                                <div id='date${note.id}' class="note__date">${note.date}</div>
-                                <div class='note__bottom'>    
-                                    <div class="tags__container" id='tags${note.id}'>
-                                    <input type='submit' value='+' class='add__tag' onclick='addNewTag(${note.id})'/>
-                                        <input type='text' class='input__tag' placeholder='#'/>
-                                    </div>
-                                    <div class='btn__del'  onclick='delNote(${note.id})'><img src='../img/1.png'/></div>
-                                </div>
-                            </div>
-                        </div>`
-        getColumn(note.column).insertAdjacentHTML('afterbegin', noteObj);//используется getColumn, т.к. JSON не может хранить html объекты
-        drawTags(note); //добавление тегов в контейнер тегов перед отрисовкой
+        let noteObj = createNoteDiv(note); //creates the note's div object
+        getColumn(note.column).insertAdjacentHTML('afterbegin', noteObj);//getColumn is used since JSON can't store html-objects
+        drawTags(note); //drawing the note's tags
     })
-    console.log(Notes)
 }
 
-//удаляет объекты перед перерисовкой 
+//clear all notes before drawing the new ones 
 function clearHTML() {
-    let notes = Array.from(document.querySelectorAll('.note__box'));
+    let notes = Array.from(document.querySelectorAll('.note__box')); //gets all of the notes divs
     notes.forEach(note => {
-        note.remove();
+        note.remove(); //delete a note's div
     })
 }
 
-//перемещение заметки в другую колонку
+//moves a note to the right or the left column
 function moveCol(note, dir) {
     let col = note.column;
     if (dir == 'r') {
@@ -144,29 +112,26 @@ function moveCol(note, dir) {
     }
 }
 
-//удаление заметки
+//deletes note
 function delNote(id) { 
     Notes.forEach((note, index) => {
-        //ищет необходимую заметку
+        //search for the needed note
         if (note.id == id) {
-            //передвигает заметки, находящиеся справа от удаляемой на 1 столбик влево
+            //moves the notes after the deleted one to the left
             for (let i = index - 1; i >= 0; i--) {
                 moveCol(Notes[i], 'l');
             }
-            //удаление необходимой заметки
-            Notes.splice(index, 1); 
-            localStorage.setItem('notes', JSON.stringify(Notes))
-            //отрисовка
-            drawNotes();
+            Notes.splice(index, 1); //deletes the selected note 
+            drawNotes(); //draws a new display
             return
         }
     })
 }
 
-//форматирование даты
+
 function formatDate(date, format) {
     const map = {
-        MM: ('0' + (date.getMonth() + 1)).slice(-2), //slice(-2) дает только 2 последних числа
+        MM: ('0' + (date.getMonth() + 1)).slice(-2), //slice(-2) returns the 2 last digits
         DD: date.getDate(),
         YY: date.getFullYear().toString().slice(-2),
         YYYY: date.getFullYear(),
@@ -176,42 +141,20 @@ function formatDate(date, format) {
     return format.replace(/MM|DD|YY|YYYY|hh|mm/gi, matched => map[matched]);
 }
 
-//используется для проверки работоспособности. Создает необходимое количество заметок
-function addFakeNotes(num) {
-    for (let i = 0; i < num; i++) {
-        let noteObj = {
-            id: i,
-            title: 'Title' + i,
-            text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-            date: '22.04.2021',
-            column: col1,
-            color: colors[1],
-            tags: []
-        }
-        //передвигает ранее созданные заметки вправо, чтобы освободить место для новой
-        Notes.forEach(note => {
-            moveCol(note, 'r');
-        })
-        Notes.push(noteObj)
-    }
-    drawNotes()
-}
-
-//добавление тэга
+//adds a tag
 function addNewTag(id){
    let inputTags = Array.from(document.querySelectorAll('.input__tag'));
-   //поиск нужной заметки
+   //search for the needed note
    inputTags.forEach(input =>{
         if(input.parentElement.id == 'tags'+id){
-            //отображение/скрытие добавления
+            //display/hide addTagBtn
             input.classList.toggle('active');
-            //если поле добавление активно, то при следующем нажатии нужно добавить тег
+            //if the input is active add the tag on the next click
             if(!input.classList.contains('active')){
                 Notes.forEach((note, index)=>{
                     if(note.id == id){
-                        Notes[index].tags.push(input.value)
-                        localStorage.setItem('notes', JSON.stringify(Notes))
-                        drawNotes(); //перерисовка с новыми тегами
+                        Notes[index].tags.push(input.value) //adds tags to the note
+                        drawNotes(); //drawing a new display
                         return
                     }
                 })
@@ -221,21 +164,19 @@ function addNewTag(id){
 }
 
 function drawTags(note){
-    //получает поле тэгов нужной заметки
-    let noteTags = document.getElementById('tags'+note.id);
-    //получет теги заметки
-    let tags = note.tags;
+    let noteTags = document.getElementById('tags'+note.id); //gets tags container of a note
+    let tags = note.tags; //gets the note's tags
     if(noteTags !== null){
         tags.forEach(tag=>{
-            const div = document.createElement('div') //контейнер тега
-            div.classList='note__tag' //класс контейнера тега
-            div.innerText = '#'+tag //вставка текста тега
-            noteTags.appendChild(div); //вставка тега в поле тегов 
+            const div = document.createElement('div') //tag div
+            div.classList='note__tag' 
+            div.innerText = '#'+tag 
+            noteTags.appendChild(div)
         })
     }
 }
 
-//возвращает нужную колонку
+//return the needed column
 function getColumn(col){
     if(col == 'col1'){
         return col1;
@@ -246,4 +187,113 @@ function getColumn(col){
     if(col == 'col3'){
         return col3;
     }
+}
+
+function changeNote(event, id){
+    let note;
+    //search for the needed note
+    Notes.forEach(noteObj=>{
+        if(noteObj.id == id){
+            note = noteObj
+        }
+    })
+    let colorList = getColorList();
+    colorList.id = 'colorList'+note.id
+    let Title = document.getElementById('title'+note.id)//gets the note's title div
+    let Text = document.getElementById('text'+note.id)//gets the note's text div
+    let parent = Title.parentElement //gets the parent
+    let newTitle = document.createElement('input'); //creates an input for editing
+    let newText = document.createElement('textarea');//creates a textarea for editing
+    newTitle.classList.add('title__input')
+    newTitle.classList.add('note__title')
+    newTitle.value = Title.innerText //inserts the current title
+    newTitle.id = 'title'+id
+    newText.classList.add('text__input')
+    newText.classList.add('note__text')
+    newText.innerText = Text.innerText //inserts the current text
+    newText.id = 'text'+id
+    parent.replaceChild(newTitle, Title); //replaces the note's title div by input
+    parent.replaceChild(newText, Text); //replaces the note's text div by textarea
+    parent.appendChild(colorList)
+    let target = event.target.parentElement //gets the edit button
+    target.onclick = function(){confirmChanges(id)} //changes the button action   
+}
+
+//saves edit changes 
+function confirmChanges(id){
+    let title = document.getElementById('title'+id) //gets input
+    let text = document.getElementById('text'+id)
+    //search for the needed note
+    Notes.forEach(note=>{
+        if(note.id==id){
+            note.title = title.value //sets the new note's title 
+            note.text = text.value
+	    drawNotes(); //drawing a new display
+        }  
+    })   
+}
+
+//creates a colorList
+function getColorList(){
+    let colorList = document.createElement('div')
+    colorList.classList = 'color__list'
+    for(let i=0; i<colors.length; i++){
+        let colorItem = document.createElement('div')
+        colorItem.classList = 'color__item'
+        colorItem.onclick = function(){changeColor(event, i)}
+        colorItem.style.backgroundColor = 'rgb('+colors[i][0]+','+colors[i][1]+','+colors[i][2] +')'
+        colorList.appendChild(colorItem);
+    }
+    return colorList
+}
+
+//changes color on click
+function changeColor(e, i){
+    let parent = e.target.parentElement
+    let noteId = +/\d+/.exec(parent.id) //gets the note's id
+    //search for the needed note
+    Notes.forEach(note=>{
+        if(note.id == noteId){
+            note.color = colors[i] //sets the new color
+        }
+    drawNotes(); //drawing a new display
+    })
+}
+
+
+function createNoteDiv(note){
+    return ` <div id='note${note.id}' class="note__box" style='background:linear-gradient(225deg, transparent 40px, rgba(${note.color[0]}, ${note.color[1]}, ${note.color[2]}, 1) 0);'>
+    <div class='corner' style='background:linear-gradient(225deg, transparent 40px, rgba(${note.color[0]-30}, ${note.color[1]-40}, ${note.color[2]-40}, 1) 0);'></div>
+    <div class="container__note">
+        <div id='title${note.id}' class="note__title">${note.title}</div>
+        <div id='text${note.id}' class="note__text">
+            <p>${note.text}</p>
+        </div>
+        <div id='date${note.id}' class="note__date">${note.date}</div>
+        <div class='note__bottom'>    
+            <div class="tags__container" id='tags${note.id}'>
+            <input type='submit' value='+' class='add__tag' onclick='addNewTag(${note.id})'/>
+                <input type='text' class='input__tag' placeholder='#'/>
+            </div>
+            <div class='note__btns'>
+                
+                <div class='btn__change'  onclick='changeNote(event, ${note.id})'><img src='./img/2.png'/></div>
+                <div class='btn__del'  onclick='delNote(${note.id})'><img src='./img/1.png'/></div>
+            </div>
+        </div>
+    </div>
+</div>`
+}
+
+function createMaketDiv(newdate){
+    return `<div id='note${id}' class='note__box' style='background: rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)'>
+    <div class="container__note">
+        <input id='title${id}' type='text' class="note__title title__input" placeholder='Title'/>
+        <textarea id='text${id}' class="note__text text__input" placeholder='Type your note...'></textarea>
+          
+        </div>
+        <div id='date${id}' class="note__date">${newdate}</div>
+        <input type='submit' class="btn_note_add" onclick='addNoteToList(${id})' value='+'>
+    </div>
+</div>`
 }
